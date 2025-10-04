@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title id="blog-post-title">Blog Post Title</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    import { blogs } from './js/blogsData.js';
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyACCpl5f7g34Fs0eMxUguBuGE80SuKZCIA",
+      authDomain: "hrms-326ad.firebaseapp.com",
+      projectId: "hrms-326ad",
+      storageBucket: "hrms-326ad.firebasestorage.app",
+      messagingSenderId: "813107687048",
+      appId: "1:813107687048:web:2d3c2fff54a65285ba793d",
+      measurementId: "G-HXGFCBV64Q"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.submitJoinForm = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+      const instagramId = document.getElementById('instagramId').value;
+      const location = document.getElementById('location').value;
+      const whatTheyDo = document.getElementById('whatTheyDo').value;
+      const whyWantToJoin = document.getElementById('whyWantToJoin').value;
+      const formMessage = document.getElementById('formMessage');
+
+      try {
+        await addDoc(collection(db, 'joinRequests'), {
+          name: name,
+          phone: phone,
+          email: email,
+          instagramId: instagramId,
+          location: location,
+          whatTheyDo: whatTheyDo,
+          whyWantToJoin: whyWantToJoin,
+          timestamp: serverTimestamp()
+        });
+        formMessage.textContent = 'Your request has been submitted successfully!';
+        formMessage.classList.remove('text-red-500');
+        formMessage.classList.add('text-green-300');
+        document.getElementById('joinForm').reset();
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        formMessage.textContent = 'Error submitting your request. Please try again.';
+        formMessage.classList.remove('text-green-300');
+        formMessage.classList.add('text-red-500');
+      }
+    };
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #38bdf8, #22c55e);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(to bottom, #22d3ee, #4ade80);
+    }
+    html {
+      scrollbar-color: #22c55e #1e3a8a;
+      scrollbar-width: thin;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    /* Animated gradient background helpers */
+    .animated-gradient {
+      background: radial-gradient(1000px 600px at 10% 10%, rgba(16, 185, 129, 0.25), transparent 60%),
+                  radial-gradient(800px 500px at 90% 20%, rgba(59, 130, 246, 0.25), transparent 60%),
+                  radial-gradient(900px 700px at 30% 90%, rgba(16, 185, 129, 0.2), transparent 60%);
+      animation: gradientShift 18s ease-in-out infinite alternate;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 0%, 100% 0%, 30% 100%; }
+      50% { background-position: 20% 10%, 80% 10%, 40% 90%; }
+      100% { background-position: 10% 20%, 90% 15%, 35% 95%; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-green-500 text-white font-sans overflow-auto">
+
+  <header class="glass w-full flex justify-between items-center px-6 py-4 fixed top-0 z-50 rounded-b-xl">
+    <a href="/" class="text-xl font-bold tracking-wide hover:text-green-300 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-out">NextGen Udaan Blogs</a>
+    <nav class="hidden md:flex items-center space-x-6 text-sm md:text-base">
+      <a href="/" class="hover:text-green-300">Home</a>
+      <a href="/shop" class="hover:text-green-300">Products</a>
+      <a href="../nextgenudaan/index.html#join" class="hover:text-green-300">Join Us</a>
+      <a href="/blogs" class="hover:text-green-300">Blog</a>
+      <a href="./blogs.html#footer" class="hover:text-green-300">Contact</a>
+    </nav>
+    <div class="flex items-center space-x-3">
+      <button onclick="openDialog('formDialog')" class="hidden md:inline-block bg-green-400 hover:bg-green-300 text-blue-900 font-semibold px-4 py-2 rounded-xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-out">Join Now</button>
+      <button id="mobileMenuButton" class="md:hidden text-white text-2xl focus:outline-none" aria-expanded="false" aria-controls="mobileMenu">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+      </button>
+    </div>
+  </header>
+
+  <div id="mobileMenu" class="hidden md:hidden fixed inset-0 bg-blue-900/90 backdrop-blur-sm z-40 flex flex-col items-center justify-center space-y-8 text-2xl font-bold" aria-hidden="true">
+    <button onclick="closeMobileMenu()" class="absolute top-6 right-6 text-white text-4xl" aria-label="Close menu">&times;</button>
+    <a href="/" class="hover:text-green-300" onclick="closeMobileMenu()">Home</a>
+    <a href="/shop" class="hover:text-green-300" onclick="closeMobileMenu()">Products</a>
+    <a href="../nextgenudaan/index.html#join" class="hover:text-green-300" onclick="closeMobileMenu()">Join Us</a>
+    <a href="/blogs" class="hover:text-green-300" onclick="closeMobileMenu()">Blog</a>
+    <a href="./blogs.html#footer" class="hover:text-green-300" onclick="closeMobileMenu()">Contact</a>
+    <button onclick="openDialog('formDialog'); closeMobileMenu();" class="bg-green-400 hover:bg-green-300 text-blue-900 font-semibold px-6 py-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-out">Join Now</button>
+  </div>
+
+  <main id="blog-post-content-section" class="pt-28 px-6 max-w-5xl mx-auto pb-10 flex-grow">
+    <button onclick="window.location.href = '/blogs'" class="mb-6 bg-white/10 px-4 py-2 rounded-full hover:bg-green-400 hover:text-blue-900">← Back to Blogs</button>
+
+    <h1 id="blog-title" class="text-4xl font-bold mb-6"></h1>
+
+    <div id="blog-content" class="prose prose-invert lg:prose-xl text-white">
+      <!-- Blog Post Content Will Be Dynamically Loaded Here -->
+    </div>
+  </main>
+
+  <div id="aboutDialog" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+    <div class="glass text-white rounded-2xl shadow-2xl max-w-2xl p-6 relative">
+      <button onclick="closeDialog('aboutDialog')" class="absolute top-3 right-4 text-white text-xl font-bold hover:text-red-400">&times;</button>
+      <h2 class="text-3xl font-bold mb-4 text-center">Why Fly With Us?</h2>
+      <p class="text-lg leading-relaxed text-center">
+        NextGen Udaan empowers ambitious hustlers across India to build a future‑proof digital business with 
+        <span class="font-semibold">zero investment</span>, ethical marketing, and unstoppable community energy ✨.<br><br>
+        You bring the hunger. We bring the roadmap.
+      </p>
+    </div>
+  </div>
+  
+  <div id="formDialog" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+    <div class="glass text-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] p-6 relative overflow-y-auto">
+      <button onclick="closeDialog('formDialog')" class="absolute top-3 right-4 text-white text-xl font-bold hover:text-red-400">&times;</button>
+      <h3 class="text-2xl font-semibold mb-6 text-green-300 text-center">Request Your Free Onboarding Call</h3>
+      <div class="rounded-xl overflow-hidden">
+        <!-- Replaced Google Form with a custom form for Firebase integration -->
+        <form id="joinForm" class="space-y-4" onsubmit="submitJoinForm(event)">
+          <input type="text" id="name" placeholder="Your Name" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+          <input type="tel" id="phone" placeholder="Your Mobile Number" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+          <input type="email" id="email" placeholder="Your Email" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+          <input type="text" id="instagramId" placeholder="Your Instagram ID" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
+          <input type="text" id="location" placeholder="Your Location (City, State)" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+          <input type="text" id="whatTheyDo" placeholder="What do you do?" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
+          <textarea id="whyWantToJoin" placeholder="Why do you want to join NextGen Udaan?" rows="4" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
+          <button type="submit" class="w-full bg-green-400 hover:bg-green-300 text-blue-900 font-bold px-8 py-3 rounded-2xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out mt-4">Submit Request</button>
+          <p id="formMessage" class="text-center mt-4 text-sm"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<!-- Footer -->
+<footer id="footer" class="mt-10 mb-6 text-sm text-center text-gray-300 transition hover:text-green-300 hover:drop-shadow-[0_0_10px_#22c55e]">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <!-- Social Links -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Connect With Us</h4>
+        <div class="flex justify-center md:justify-start space-x-4">
+          <a href="https://www.instagram.com/nextgenudaan/" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61578202508471" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://wa.me/919717113764" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://t.me/+MjLuhi5tMh9hZjFl" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://www.youtube.com/@nextgenudaan" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/YouTube_full-color_icon_%282024%29.svg" alt="YouTube" class="w-6 h-6 rounded-full" />
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+        <ul class="space-y-2">
+          <li><a href="/shop" class="hover:text-green-300 transition-colors duration-300">Products</a></li>
+          <li><a href="/blogs" class="hover:text-green-300 transition-colors duration-300">Blogs</a></li>
+          <li><a href="/Privacy-Policy.html" class="hover:text-green-300 transition-colors duration-300">Privacy Policy</a></li>
+          <li><a href="/terms.html" class="hover:text-green-300 transition-colors duration-300">Terms</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Contact Us</h4>
+        <p class="mb-2">Email: <a href="mailto:help.nextgenudaan@gmail.com" class="hover:text-green-300 transition-colors duration-300">help.nextgenudaan@gmail.com</a></p>
+        <p>WhatsApp: <a href="https://wa.me/919717113764" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">+91 9717113764</a></p>
+      </div>
+    </div>
+    <div class="border-t border-gray-700 pt-8 mt-8">
+      © <span id="currentYear"></span> NextGen Udaan. All Rights Reserved.
+    </div>
+  </div>
+</footer>
+
+<script>
+  function openDialog(id) {
+    document.getElementById(id).classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeDialog(id) {
+    document.getElementById(id).classList.add('hidden');
+    document.body.style.overflow = 'auto';
+  }
+  function openMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    mobileMenu.classList.remove('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'false');
+    mobileMenuButton.setAttribute('aria-expanded', 'true');
+    document.body.style.overflow = 'hidden';
+  }
+  function closeMobileMenu() {
+    const mobileMenu = document.getElementById('mobileMenu');
+    const mobileMenuButton = document.getElementById('mobileMenuButton');
+    mobileMenu.classList.add('hidden');
+    mobileMenu.setAttribute('aria-hidden', 'true');
+    mobileMenuButton.setAttribute('aria-expanded', 'false');
+    document.body.style.overflow = 'auto';
+  }
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      closeDialog('aboutDialog');
+      closeDialog('formDialog');
+      closeMobileMenu();
+    }
+  });
+  document.getElementById('mobileMenuButton').addEventListener('click', openMobileMenu);
+
+  // Dismiss modals by clicking outside
+  document.addEventListener('click', (e) => {
+    if (e.target.id === 'aboutDialog') {
+      closeDialog('aboutDialog');
+    }
+    if (e.target.id === 'formDialog') {
+      closeDialog('formDialog');
+    }
+  });
+
+  // Set current year dynamically
+  document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+  // Blog post dynamic loading logic
+  const blogPostTitleElement = document.getElementById('blog-post-title');
+  const blogTitleElement = document.getElementById('blog-title');
+  const blogContentElement = document.getElementById('blog-content');
+
+  const urlParams = new URLSearchParams(window.location.search);
+  const blogId = urlParams.get('id');
+
+  if (blogId) {
+    const blog = blogs.find(b => b.id === blogId);
+    if (blog) {
+      blogPostTitleElement.textContent = blog.title; // Update document title
+      blogTitleElement.textContent = blog.title;
+      blogContentElement.innerHTML = blog.fullContent;
+    } else {
+      blogPostTitleElement.textContent = 'Blog Post Not Found';
+      blogTitleElement.textContent = 'Blog Post Not Found';
+      blogContentElement.innerHTML = '<p class="text-center text-xl text-gray-400">Sorry, the blog post you are looking for does not exist.</p>';
+    }
+  } else {
+    blogPostTitleElement.textContent = 'Invalid Blog Post';
+    blogTitleElement.textContent = 'Invalid Blog Post';
+    blogContentElement.innerHTML = '<p class="text-center text-xl text-gray-400">No blog ID provided. Please navigate from the <a href="/blogs" class="text-green-300 hover:underline">Blogs page</a>.</p>';
+  }
+
+</script>
+
+</body>
+</html>

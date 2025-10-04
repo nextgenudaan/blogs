@@ -1,0 +1,448 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NextGen Udaan Blogs</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <meta property="og:title" content="NextGen Udaan – Soch Badal, Zindagi Badal" />
+  <meta property="og:description" content="Leader Ban, Follower Nahi. Join the tribe & start your digital business journey today!" />
+  <meta property="og:image" content="https://raw.githubusercontent.com/yourusername/nextgen-udaan/main/og-image.jpg" />
+  
+  <script type="module">
+    // Import the functions you need from the SDKs you need
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-analytics.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js";
+
+    import { blogs } from './js/blogsData.js';
+
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyACCpl5f7g34Fs0eMxUguBuGE80SuKZCIA",
+      authDomain: "hrms-326ad.firebaseapp.com",
+      projectId: "hrms-326ad",
+      storageBucket: "hrms-326ad.firebasestorage.app",
+      messagingSenderId: "813107687048",
+      appId: "1:813107687048:web:2d3c2fff54a65285ba793d",
+      measurementId: "G-HXGFCBV64Q"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getFirestore(app);
+
+    window.submitJoinForm = async function(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('name').value;
+      const phone = document.getElementById('phone').value;
+      const email = document.getElementById('email').value;
+      const instagramId = document.getElementById('instagramId').value;
+      const location = document.getElementById('location').value;
+      const whatTheyDo = document.getElementById('whatTheyDo').value;
+      const whyWantToJoin = document.getElementById('whyWantToJoin').value;
+      const formMessage = document.getElementById('formMessage');
+
+      try {
+        await addDoc(collection(db, 'joinRequests'), {
+          name: name,
+          phone: phone,
+          email: email,
+          instagramId: instagramId,
+          location: location,
+          whatTheyDo: whatTheyDo,
+          whyWantToJoin: whyWantToJoin,
+          timestamp: serverTimestamp()
+        });
+        formMessage.textContent = 'Your request has been submitted successfully!';
+        formMessage.classList.remove('text-red-500');
+        formMessage.classList.add('text-green-300');
+        document.getElementById('joinForm').reset();
+      } catch (error) {
+        console.error("Error writing document: ", error);
+        formMessage.textContent = 'Error submitting your request. Please try again.';
+        formMessage.classList.remove('text-green-300');
+        formMessage.classList.add('text-red-500');
+      }
+    };
+
+    // Functions for dialogs and mobile menu
+    window.openDialog = function(id) {
+      document.getElementById(id).classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+    }
+    window.closeDialog = function(id) {
+      document.getElementById(id).classList.add('hidden');
+      document.body.style.overflow = 'auto';
+    }
+    window.openMobileMenu = function() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      mobileMenu.classList.remove('hidden');
+      mobileMenu.setAttribute('aria-hidden', 'false');
+      mobileMenuButton.setAttribute('aria-expanded', 'true');
+      document.body.style.overflow = 'hidden';
+    }
+    window.closeMobileMenu = function() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      const mobileMenuButton = document.getElementById('mobileMenuButton');
+      mobileMenu.classList.add('hidden');
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      mobileMenuButton.setAttribute('aria-expanded', 'false');
+      document.body.style.overflow = 'auto';
+    }
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        closeDialog('aboutDialog');
+        closeDialog('formDialog');
+        closeMobileMenu();
+      }
+    });
+    document.getElementById('mobileMenuButton').addEventListener('click', openMobileMenu);
+
+    // Dismiss modals by clicking outside
+    document.addEventListener('click', (e) => {
+      if (e.target.id === 'aboutDialog') {
+        closeDialog('aboutDialog');
+      }
+      if (e.target.id === 'formDialog') {
+        closeDialog('formDialog');
+      }
+    });
+
+    // Set current year dynamically
+    document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+    const searchInput = document.querySelector('input[type="text"]');
+    const searchButton = document.getElementById('searchButton');
+    const menuButton = document.getElementById('menu-button');
+    const filterDropdown = document.getElementById('filter-dropdown');
+    const filterButtonText = document.getElementById('filterButtonText');
+    const blogList = document.getElementById('blog-list');
+
+    let currentSearchTerm = '';
+    let currentCategoryFilter = 'All';
+
+    function renderBlogs(filteredBlogs) {
+      blogList.innerHTML = ''; // Clear existing blogs
+
+      if (filteredBlogs.length === 0) {
+        blogList.innerHTML = '<p class="text-center text-xl text-gray-400 col-span-full">No blogs found matching your criteria.</p>';
+        return;
+      }
+
+      filteredBlogs.forEach(blog => {
+        const blogCard = document.createElement('div');
+        blogCard.className = "glass p-5 rounded-xl shadow-md hover:scale-105 transition cursor-pointer";
+        blogCard.onclick = () => { window.location.href = `/blogs/blog-post.html?id=${blog.id}`; };
+        blogCard.setAttribute('data-category', blog.category);
+
+        blogCard.innerHTML = `
+          <img src="${blog.image}" class="rounded-lg mb-4 w-full h-40 object-cover" alt="Blog Cover">
+          <h3 class="text-xl font-bold mb-2">${blog.title}</h3>
+          <p class="text-sm text-gray-200">${blog.shortDescription}</p>
+        `;
+        blogList.appendChild(blogCard);
+      });
+    }
+
+    function filterBlogs() {
+      const filtered = blogs.filter(blog => {
+        const title = blog.title.toLowerCase();
+        const description = blog.shortDescription.toLowerCase();
+        const categories = blog.category.toLowerCase();
+
+        const matchesSearch = title.includes(currentSearchTerm.toLowerCase()) || description.includes(currentSearchTerm.toLowerCase());
+        const matchesCategory = currentCategoryFilter === 'All' || categories.includes(currentCategoryFilter.toLowerCase());
+
+        return matchesSearch && matchesCategory;
+      });
+      renderBlogs(filtered);
+    }
+
+    searchInput.addEventListener('keyup', (e) => {
+      currentSearchTerm = e.target.value;
+      filterBlogs();
+    });
+
+    searchButton.addEventListener('click', () => {
+      currentSearchTerm = searchInput.value;
+      filterBlogs();
+    });
+
+    menuButton.addEventListener('click', () => {
+      filterDropdown.classList.toggle('hidden');
+    });
+
+    // Populate categories dynamically and add event listeners
+    const uniqueCategories = [...new Set(blogs.flatMap(blog => blog.category.split(' ')))];
+    const filterDropdownContent = filterDropdown.querySelector('div');
+    filterDropdownContent.innerHTML = ''; // Clear existing hardcoded categories
+
+    // Add 'All' category first
+    const allCategoryLink = document.createElement('a');
+    allCategoryLink.href = "#";
+    allCategoryLink.className = "text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900";
+    allCategoryLink.setAttribute('role', 'menuitem');
+    allCategoryLink.setAttribute('tabindex', '-1');
+    allCategoryLink.setAttribute('data-category', 'All');
+    allCategoryLink.textContent = "All";
+    allCategoryLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      filterDropdown.classList.add('hidden');
+      currentCategoryFilter = e.target.dataset.category;
+      filterButtonText.textContent = `Filter by: ${currentCategoryFilter}`;
+      filterBlogs();
+    });
+    filterDropdownContent.appendChild(allCategoryLink);
+
+    uniqueCategories.forEach(category => {
+      if (category) { // Ensure category is not an empty string
+        const categoryLink = document.createElement('a');
+        categoryLink.href = "#";
+        categoryLink.className = "text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900";
+        categoryLink.setAttribute('role', 'menuitem');
+        categoryLink.setAttribute('tabindex', '-1');
+        categoryLink.setAttribute('data-category', category);
+        categoryLink.textContent = category;
+        categoryLink.addEventListener('click', (e) => {
+          e.preventDefault();
+          filterDropdown.classList.add('hidden');
+          currentCategoryFilter = e.target.dataset.category;
+          filterButtonText.textContent = `Filter by: ${currentCategoryFilter}`;
+          filterBlogs();
+        });
+        filterDropdownContent.appendChild(categoryLink);
+      }
+    });
+
+    // Close the dropdown if the user clicks outside of it
+    window.addEventListener('click', (e) => {
+      if (!menuButton.contains(e.target) && !filterDropdown.contains(e.target)) {
+        filterDropdown.classList.add('hidden');
+      }
+    });
+
+    // Initial filter application to show all blogs
+    filterBlogs();
+  </script>
+  <script>
+    function smoothScroll(targetId) {
+      const targetElement = document.getElementById(targetId);
+      if (targetElement) {
+        window.scrollTo({
+          top: targetElement.offsetTop,
+          behavior: 'smooth'
+        });
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(to bottom, #38bdf8, #22c55e);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: linear-gradient(to bottom, #22d3ee, #4ade80);
+    }
+    html {
+      scrollbar-color: #22c55e #1e3a8a;
+      scrollbar-width: thin;
+    }
+    .glass {
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+    /* Animated gradient background helpers */
+    .animated-gradient {
+      background: radial-gradient(1000px 600px at 10% 10%, rgba(16, 185, 129, 0.25), transparent 60%),
+                  radial-gradient(800px 500px at 90% 20%, rgba(59, 130, 246, 0.25), transparent 60%),
+                  radial-gradient(900px 700px at 30% 90%, rgba(16, 185, 129, 0.2), transparent 60%);
+      animation: gradientShift 18s ease-in-out infinite alternate;
+    }
+    @keyframes gradientShift {
+      0% { background-position: 0% 0%, 100% 0%, 30% 100%; }
+      50% { background-position: 20% 10%, 80% 10%, 40% 90%; }
+      100% { background-position: 10% 20%, 90% 15%, 35% 95%; }
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-900 via-blue-800 to-green-500 text-white font-sans overflow-auto">
+
+<!-- Header/Navbar -->
+<header class="glass w-full flex justify-between items-center px-6 py-4 fixed top-0 z-50 rounded-b-xl">
+  <a href="/" class="text-xl font-bold tracking-wide hover:text-green-300 transition-transform transform hover:-translate-y-1 hover:scale-105 duration-300 ease-out">NextGen Udaan Blogs</a>
+    <nav class="hidden md:flex items-center space-x-6 text-sm md:text-base">
+      <a href="/" class="hover:text-green-300">Home</a>
+      <a href="/shop" class="hover:text-green-300">Products</a>
+      <a href="#formDialog" class="hover:text-green-300" onclick="event.preventDefault(); openDialog('formDialog');">Join Us</a>
+      <a href="/blogs" class="hover:text-green-300">Blog</a>
+      <a href="#footer" class="hover:text-green-300" onclick="event.preventDefault(); smoothScroll('footer');">Contact</a>
+    </nav>
+  <div class="flex items-center space-x-3">
+    <button onclick="openDialog('formDialog')" class="hidden md:inline-block bg-green-400 hover:bg-green-300 text-blue-900 font-semibold px-4 py-2 rounded-xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-out">Join Now</button>
+    </a>
+    <button id="mobileMenuButton" class="md:hidden text-white text-2xl focus:outline-none" aria-expanded="false" aria-controls="mobileMenu">
+      <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path></svg>
+    </button>
+  </div>
+</header>
+
+<div id="mobileMenu" class="hidden md:hidden fixed inset-0 bg-blue-900/90 backdrop-blur-sm z-40 flex flex-col items-center justify-center space-y-8 text-2xl font-bold" aria-hidden="true">
+  <button onclick="closeMobileMenu()" class="absolute top-6 right-6 text-white text-4xl" aria-label="Close menu">&times;</button>
+  <a href="/" class="hover:text-green-300" onclick="closeMobileMenu()">Home</a>
+  <a href="/shop" class="hover:text-green-300" onclick="closeMobileMenu()">Products</a>
+  <a href="#formDialog" class="hover:text-green-300" onclick="event.preventDefault(); openDialog('formDialog'); closeMobileMenu();">Join Us</a>
+  <a href="/blogs" class="hover:text-green-300" onclick="closeMobileMenu()">Blog</a>
+  <a href="#footer" class="hover:text-green-300" onclick="event.preventDefault(); smoothScroll('footer'); closeMobileMenu();">Contact</a>
+  <button onclick="openDialog('formDialog'); closeMobileMenu();" class="bg-green-400 hover:bg-green-300 text-blue-900 font-semibold px-6 py-3 rounded-xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-out">Join Now</button>
+</div>
+<!-- About Dialog -->
+<div id="aboutDialog" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="glass text-white rounded-2xl shadow-2xl max-w-2xl p-6 relative">
+    <button onclick="closeDialog('aboutDialog')" class="absolute top-3 right-4 text-white text-xl font-bold hover:text-red-400">&times;</button>
+    <h2 class="text-3xl font-bold mb-4 text-center">Why Fly With Us?</h2>
+    <p class="text-lg leading-relaxed text-center">
+      NextGen Udaan empowers ambitious hustlers across India to build a future‑proof digital business with 
+      <span class="font-semibold">zero investment</span>, ethical marketing, and unstoppable community energy ✨.<br><br>
+      You bring the hunger. We bring the roadmap.
+    </p>
+  </div>
+</div>
+  
+<!-- Form Dialog -->
+<div id="formDialog" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+  <div class="glass text-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] p-6 relative overflow-y-auto">
+    <button onclick="closeDialog('formDialog')" class="absolute top-3 right-4 text-white text-xl font-bold hover:text-red-400">&times;</button>
+    <h3 class="text-2xl font-semibold mb-6 text-green-300 text-center">Request Your Free Onboarding Call</h3>
+    <div class="rounded-xl overflow-hidden">
+      <!-- Replaced Google Form with a custom form for Firebase integration -->
+      <form id="joinForm" class="space-y-4" onsubmit="submitJoinForm(event)">
+        <input type="text" id="name" placeholder="Your Name" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input type="tel" id="phone" placeholder="Your Mobile Number" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input type="email" id="email" placeholder="Your Email" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input type="text" id="instagramId" placeholder="Your Instagram ID" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <input type="text" id="location" placeholder="Your Location (City, State)" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required />
+        <input type="text" id="whatTheyDo" placeholder="What do you do?" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" />
+        <textarea id="whyWantToJoin" placeholder="Why do you want to join NextGen Udaan?" rows="4" class="w-full p-3 rounded-lg bg-white/5 border border-white/10 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-400" required></textarea>
+        <button type="submit" class="w-full bg-green-400 hover:bg-green-300 text-blue-900 font-bold px-8 py-3 rounded-2xl shadow-lg transition-transform transform hover:scale-105 duration-300 ease-in-out mt-4">Submit Request</button>
+        <p id="formMessage" class="text-center mt-4 text-sm"></p>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Search & Filters -->
+<section class="pt-28 px-6 max-w-5xl mx-auto flex-grow flex flex-col justify-between min-h-[calc(100vh-8rem)]">
+  <h1 class="text-4xl font-bold mb-4 text-center">Explore Blogs</h1>
+  <div class="mb-6 flex flex-col md:flex-row md:justify-between gap-4">
+    <div class="relative w-full md:w-2/3">
+      <input type="text" placeholder="Search blog posts..." class="w-full px-4 py-2 pl-10 rounded-xl text-black focus:outline-none">
+      <button id="searchButton" class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-5 h-5">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+        </svg>
+      </button>
+    </div>
+    <div class="relative inline-block text-left md:w-1/3">
+      <div>
+        <button type="button" class="inline-flex justify-center w-full rounded-xl border border-gray-300 shadow-sm px-4 py-2 bg-white/10 text-sm font-medium text-white hover:bg-green-400 hover:text-blue-900 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-100 focus:ring-green-500" id="menu-button" aria-expanded="true" aria-haspopup="true">
+          <span id="filterButtonText">Filter by Category</span>
+          <svg class="-mr-1 ml-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+          </svg>
+        </button>
+      </div>
+      <div class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-lg bg-white/10 ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-[60]" role="menu" aria-orientation="vertical" aria-labelledby="menu-button" tabindex="-1" id="filter-dropdown">
+        <div class="py-1" role="none">
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-all" data-category="All">All</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-tips" data-category="Tips">Tips</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-marketing" data-category="Marketing">Marketing</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-mindset" data-category="Mindset">Mindset</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-productivity" data-category="Productivity">Productivity</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-career" data-category="Career">Career</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-finance" data-category="Finance">Finance</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-health" data-category="Health">Health</a>
+          <a href="#" class="text-white block px-4 py-2 text-sm hover:bg-green-400 hover:text-blue-900" role="menuitem" tabindex="-1" id="filter-communication" data-category="Communication">Communication</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blog Cards Grid -->
+  <div id="blog-list" class="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+    <!-- Blog cards will be dynamically loaded here -->
+  </div>
+</section>
+
+<!-- About Dialog -->
+<div id="aboutDialog" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
+  <div class="glass text-white rounded-2xl shadow-2xl max-w-2xl p-6 relative">
+    <button onclick="closeDialog('aboutDialog')" class="absolute top-3 right-4 text-white text-xl font-bold hover:text-red-400">&times;</button>
+    <h2 class="text-3xl font-bold mb-4 text-center">Why Fly With Us?</h2>
+    <p class="text-lg leading-relaxed text-center">
+      NextGen Udaan empowers ambitious hustlers across India to build a future‑proof digital business with 
+      <span class="font-semibold">zero investment</span>, ethical marketing, and unstoppable community energy ✨.<br><br>
+      You bring the hunger. We bring the roadmap.
+    </p>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer id="footer" class="mt-10 mb-6 text-sm text-center text-gray-300 transition hover:text-green-300 hover:drop-shadow-[0_0_10px_#22c55e]">
+  <div class="max-w-6xl mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+      <!-- Social Links -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Connect With Us</h4>
+        <div class="flex justify-center md:justify-start space-x-4">
+          <a href="https://www.instagram.com/nextgenudaan/" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/a/a5/Instagram_icon.png" alt="Instagram" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://www.facebook.com/profile.php?id=61578202508471" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2021_Facebook_icon.svg" alt="Facebook" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://wa.me/919717113764" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://t.me/+MjLuhi5tMh9hZjFl" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/8/82/Telegram_logo.svg" alt="Telegram" class="w-6 h-6 rounded-full" />
+          </a>
+          <a href="https://www.youtube.com/@nextgenudaan" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">
+            <img src="https://upload.wikimedia.org/wikipedia/commons/f/fd/YouTube_full-color_icon_%282024%29.svg" alt="YouTube" class="w-6 h-6 rounded-full" />
+          </a>
+        </div>
+      </div>
+
+      <!-- Quick Links -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Quick Links</h4>
+        <ul class="space-y-2">
+          <li><a href="/shop" class="hover:text-green-300 transition-colors duration-300">Products</a></li>
+          <li><a href="/blogs" class="hover:text-green-300 transition-colors duration-300">Blogs</a></li>
+          <li><a href="/Privacy-Policy.html" class="hover:text-green-300 transition-colors duration-300">Privacy Policy</a></li>
+          <li><a href="/terms.html" class="hover:text-green-300 transition-colors duration-300">Terms</a></li>
+        </ul>
+      </div>
+
+      <!-- Contact Info -->
+      <div class="text-center md:text-left">
+        <h4 class="font-bold text-lg mb-4">Contact Us</h4>
+        <p class="mb-2">Email: <a href="mailto:help.nextgenudaan@gmail.com" class="hover:text-green-300 transition-colors duration-300">help.nextgenudaan@gmail.com</a></p>
+        <p>WhatsApp: <a href="https://wa.me/919717113764" target="_blank" rel="noopener noreferrer" class="hover:text-green-300 transition-colors duration-300">+91 9717113764</a></p>
+      </div>
+    </div>
+    <div class="border-t border-gray-700 pt-8 mt-8">
+      © <span id="currentYear"></span> NextGen Udaan. All Rights Reserved.
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
